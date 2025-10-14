@@ -135,11 +135,7 @@ Enable "🔬 Deep Scan" to detect:
 - **50 threads** = Balanced (default)
 - **100+ threads** = Fast scans for large networks
 
-### Keyboard Shortcuts
-- `Cmd+F` - Focus search/filter
-- `Cmd+R` - Refresh/New scan
-- `Cmd+E` - Export CSV
-- `Cmd+,` - (Future: Preferences)
+
 
 ## 📊 Supported Devices
 
