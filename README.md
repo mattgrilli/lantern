@@ -44,7 +44,7 @@ Lantern illuminates your network - discover devices, identify manufacturers, mon
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/lantern.git
+git clone https://github.com/mattgrilli/lantern.git
 cd lantern
 
 # Run Lantern
@@ -55,7 +55,7 @@ That's it! No dependencies needed - uses only Python standard library.
 
 ### Option 2: Standalone App (No Python Required)
 
-Download the latest `.app` bundle from [Releases](https://github.com/yourusername/lantern/releases) and drag to Applications.
+Download the latest `.app` bundle from [Releases](https://github.com/mattgrilli/lantern/releases) and drag to Applications.
 
 > **Note for macOS Gatekeeper:** First time opening, right-click the app and select "Open" to bypass Gatekeeper warnings.
 
