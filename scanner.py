@@ -149,7 +149,7 @@ class IPScannerGUI:
         title_frame = ttk.Frame(main_frame)
         title_frame.grid(row=0, column=0, pady=(0, 10), sticky=tk.W)
 
-        title_label = ttk.Label(title_frame, text="Lantern Network Scanner Pro", font=('Arial', 16, 'bold'))
+        title_label = ttk.Label(title_frame, text="Lantern Network Scanner Pro v1.1.0", font=('Arial', 16, 'bold'))
         title_label.pack(side=tk.LEFT)
 
         self.monitor_indicator = ttk.Label(title_frame, text="", font=('Arial', 10))
