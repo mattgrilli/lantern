@@ -1,7 +1,8 @@
 #!/bin/bash
 # Build a standalone Lantern app with PyInstaller.
 # macOS: dist/Lantern.app   Linux: dist/Lantern
-# (Windows: py -m PyInstaller --name Lantern --windowed --onefile --collect-submodules zeroconf lantern.py)
+# (Windows: py -m PyInstaller --name Lantern --windowed --onefile --collect-submodules zeroconf
+#           --add-data "assets;assets" --icon assets\lantern.ico lantern.py)
 
 set -e
 cd "$(dirname "$0")"
@@ -34,6 +35,12 @@ if ! python3 -c 'import zeroconf' &> /dev/null; then
 fi
 echo "✓ Bundling zeroconf for mDNS printer discovery"
 
+# PyInstaller needs Pillow to turn the PNG icon into a macOS .icns.
+if [ "$(uname)" = "Darwin" ] && ! python3 -c 'import PIL' &> /dev/null; then
+    echo "📦 Installing Pillow (for the app icon)..."
+    python3 -m pip install Pillow
+fi
+
 rm -rf build/ dist/ Lantern.spec
 
 python3 -m PyInstaller \
@@ -44,6 +51,8 @@ python3 -m PyInstaller \
     --noconfirm \
     --osx-bundle-identifier="com.lantern.networkscanner" \
     --collect-submodules zeroconf \
+    --add-data "assets:assets" \
+    --icon assets/lantern-512.png \
     lantern.py
 
 if [ "$(uname)" = "Darwin" ]; then

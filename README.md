@@ -1,5 +1,7 @@
 # 🏮 Lantern
 
+![Lantern scanning a sample office network](docs/hero.png)
+
 **A network scanner for macOS, Windows and Linux with device labels, monitoring and scan history**
 
 Lantern lights up your network: discover devices, identify manufacturers, watch the ones that matter, and see what changed between scans, all from a simple desktop GUI.
@@ -53,6 +55,8 @@ Running from source needs only the Python standard library. Two optional extras:
 - **mDNS on Windows and Linux**: `pip install zeroconf` (macOS already uses the built-in `dns-sd`)
 - **Linux**: tkinter may be a separate package (`sudo dnf install python3-tkinter` or `sudo apt install python3-tk`)
 
+Want to look around without scanning anything? `python3 lantern.py --demo` opens Lantern with a sample office network. Nothing is scanned or saved.
+
 ### Standalone app
 
 Download the latest build from [Releases](https://github.com/mattgrilli/lantern/releases).
@@ -64,9 +68,15 @@ Download the latest build from [Releases](https://github.com/mattgrilli/lantern/
 ```bash
 ./build.sh          # macOS → dist/Lantern.app, Linux → dist/Lantern
 ./create_dmg.sh     # macOS only: package the app as a DMG
+./install-linux.sh  # Linux only: add Lantern to your app menu
 ```
 
-On Windows: `py -m pip install pyinstaller zeroconf` then `py -m PyInstaller --name Lantern --windowed --onefile --collect-submodules zeroconf lantern.py`.
+On Windows:
+
+```bat
+py -m pip install pyinstaller zeroconf
+py -m PyInstaller --name Lantern --windowed --onefile --collect-submodules zeroconf --add-data "assets;assets" --icon assets\lantern.ico lantern.py
+```
 
 Built apps always include zeroconf, so mDNS printer discovery works without installing anything.
 
@@ -135,6 +145,8 @@ Data saved by older versions of Lantern in these locations is picked up automati
 ```bash
 python3 -m unittest discover -s tests
 ```
+
+`python3 lantern.py --demo` loads a made-up network ([demo.py](demo.py)), which is how the screenshots are made.
 
 - [lantern.py](lantern.py): the Tkinter GUI
 - [netscan.py](netscan.py): ping, ARP, port checks, mDNS and device classification (no GUI code)

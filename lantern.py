@@ -15,6 +15,7 @@ import ipaddress
 import json
 import os
 import queue
+import sys
 import threading
 import time
 import webbrowser
@@ -25,9 +26,12 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, simpledialog, filedialog
 import tkinter.font as tkfont
 
+import demo as demo_data
 import netscan
 from netscan import UNKNOWN, device_key
 
+# PyInstaller unpacks bundled files to sys._MEIPASS; from source they sit next to this file.
+ASSET_DIR = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "assets"
 APP_DIR = Path(netscan.app_data_dir())
 STATE_FILE = APP_DIR / "scanner_data.json"
 HISTORY_LIMIT = 50
@@ -45,8 +49,9 @@ FIELD_FOR_COLUMN = {"Label": None, "IP": "ip", "Hostname": "hostname", "MAC": "m
 
 
 class LanternApp:
-    def __init__(self, root):
+    def __init__(self, root, demo=False):
         self.root = root
+        self.demo = demo
         self.root.title(f"Lantern {__version__}")
         self.root.geometry("1250x820")
         self.root.minsize(900, 600)
@@ -68,10 +73,20 @@ class LanternApp:
         # Tk itself must only be touched from the main thread.
         self._ui_queue = queue.Queue()
 
-        APP_DIR.mkdir(parents=True, exist_ok=True)
-        self.load_data()
+        if demo:
+            self.load_demo()
+        else:
+            APP_DIR.mkdir(parents=True, exist_ok=True)
+            self.load_data()
         self.setup_ui()
         self.root.after(50, self._drain_ui_queue)
+        if demo:
+            self.network_var.set(self.demo_network)
+            self.refresh_tree()
+            self.log_message("Demo mode: sample data only; nothing is scanned or saved")
+            for line in demo_data.SAMPLE_LOG:
+                self.log_message(line)
+            return
         self.detect_local_network()
         backend = netscan.mdns_backend()
         if backend:
@@ -97,7 +112,22 @@ class LanternApp:
         self.root.after(50, self._drain_ui_queue)
 
     # ----------------- UI setup -----------------
+    def apply_theme(self):
+        """Native themes on macOS and Windows; 'clam' elsewhere, since Tk's X11 default looks dated."""
+        style = ttk.Style(self.root)
+        if netscan.IS_MAC or netscan.IS_WINDOWS or "clam" not in style.theme_names():
+            return
+        style.theme_use("clam")
+        base = tkfont.nametofont("TkDefaultFont")
+        row_height = int(base.metrics("linespace") * 1.6)
+        style.configure("Treeview", rowheight=row_height, borderwidth=0)
+        style.configure("Treeview.Heading", font=(base.actual("family"), base.actual("size"), "bold"),
+                        padding=(6, 4))
+        style.configure("TButton", padding=(10, 4))
+        style.map("Treeview", background=[("selected", "#3D5A80")], foreground=[("selected", "white")])
+
     def setup_ui(self):
+        self.apply_theme()
         main = ttk.Frame(self.root, padding=10)
         main.grid(row=0, column=0, sticky="nsew")
         self.root.columnconfigure(0, weight=1)
@@ -110,7 +140,12 @@ class LanternApp:
         title.grid(row=0, column=0, pady=(0, 10), sticky="w")
         title_font = tkfont.nametofont("TkDefaultFont").copy()
         title_font.configure(size=16, weight="bold")
-        ttk.Label(title, text="🏮 Lantern", font=title_font).pack(side=tk.LEFT)
+        try:
+            self._title_icon = tk.PhotoImage(file=str(ASSET_DIR / "lantern-32.png"))
+            ttk.Label(title, image=self._title_icon).pack(side=tk.LEFT, padx=(0, 8))
+        except tk.TclError:
+            pass
+        ttk.Label(title, text="Lantern", font=title_font).pack(side=tk.LEFT)
         ttk.Label(title, text=f"v{__version__}", foreground="gray").pack(side=tk.LEFT, padx=(8, 0), pady=(6, 0))
         self.monitor_indicator = ttk.Label(title, text="", foreground="red")
         self.monitor_indicator.pack(side=tk.LEFT, padx=(20, 0))
@@ -253,7 +288,17 @@ class LanternApp:
         self.profiles = data.get("profiles", {})
         self.scan_history = data.get("history", data.get("scan_history", []))
 
+    def load_demo(self):
+        state = demo_data.demo_state()
+        self.devices = state["devices"]
+        self.device_labels, self.device_notes = state["labels"], state["notes"]
+        self.watch_list, self.scan_history = state["watch"], state["history"]
+        self.profiles = state["profiles"]
+        self.demo_network = demo_data.NETWORK
+
     def save_data(self):
+        if self.demo:
+            return
         data = {
             "version": __version__,
             "labels": self.device_labels,
@@ -376,13 +421,14 @@ class LanternApp:
     def _row_tags(self, dev):
         key = device_key(dev["ip"], dev.get("mac"))
         tags = []
+        # One colour tag per row: Tk doesn't reliably layer foreground colours from several tags.
         if dev.get("online") is False:
-            tags.append("offline")
-        elif dev.get("is_new"):
-            tags.append("new")
+            return ("offline",)
+        if dev.get("is_new"):
+            return ("new",)
         if key in self.watch_list:
-            tags.append("watched")
-        return tuple(tags)
+            return ("watched",)
+        return ()
 
     def _matches_filter(self, key, dev):
         kind = self.filter_type.get()
@@ -580,6 +626,10 @@ class LanternApp:
     def start_scan(self):
         if self.scanning:
             return
+        if self.demo:
+            messagebox.showinfo("Demo Mode", "Scanning is turned off in demo mode.\n\n"
+                                             "Run Lantern without --demo to scan your network.")
+            return
         target = self.network_var.get().strip()
         try:
             hosts = netscan.parse_targets(target)
@@ -661,7 +711,7 @@ class LanternApp:
                     dev["online"] = True
                     seen[key] = dev
                     if dev["is_new"]:
-                        self.log_message(f"🆕 New device: {dev['ip']} {dev['hostname']} ({dev['manufacturer']})")
+                        self.log_message(f"NEW device: {dev['ip']} {dev['hostname']} ({dev['manufacturer']})")
                     self.ui(self._record_device, key, dev)
                 if completed % 4 == 0 or completed == len(hosts):
                     self.ui(self.progress_var.set, completed / len(hosts) * 100)
@@ -778,10 +828,10 @@ class LanternApp:
                     continue
                 name = self.device_labels.get(key) or ip
                 if not up:
-                    self.log_message(f"⚠️  ALERT: {name} ({ip}) is OFFLINE")
+                    self.log_message(f"ALERT: {name} ({ip}) is OFFLINE")
                     self.ui(self.root.bell)
                 elif was_up is False:
-                    self.log_message(f"✅ {name} ({ip}) is back online")
+                    self.log_message(f"BACK: {name} ({ip}) is back online")
                 self.ui(self._set_online, key, up)
             for _ in range(MONITOR_INTERVAL):
                 if not self.monitoring:
@@ -882,9 +932,20 @@ class LanternApp:
             messagebox.showerror("Export Failed", f"Could not write {path}:\n{e}")
 
 
+def set_window_icon(root):
+    try:
+        images = [tk.PhotoImage(file=str(ASSET_DIR / f"lantern-{size}.png")) for size in (256, 128, 48, 32)]
+    except tk.TclError:
+        return  # missing assets just means the default icon
+    root.iconphoto(True, *images)
+    root._icon_images = images  # Tk drops images that Python stops referencing
+
+
 def main():
-    root = tk.Tk()
-    LanternApp(root)
+    # className sets the X11/Wayland window class, so desktops match it to lantern.desktop.
+    root = tk.Tk(className="lantern")
+    set_window_icon(root)
+    LanternApp(root, demo="--demo" in sys.argv[1:])
     root.mainloop()
 
 
