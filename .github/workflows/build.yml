@@ -22,8 +22,8 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: python -m unittest discover -s tests -v
@@ -44,25 +44,30 @@ jobs:
             name: windows-x64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
+      # Linux builds with the distro's Python (for its Tk); the others use setup-python.
+      - uses: actions/setup-python@v6
+        if: runner.os != 'Linux'
+        with:
+          python-version: "3.12"
 
       - name: Read version
         id: version
         shell: bash
-        run: echo "version=$(python3 -c 'import re; print(re.search(r"__version__ = \"(.+?)\"", open("lantern.py").read()).group(1))')" >> "$GITHUB_OUTPUT"
+        run: |
+          PY=$(command -v python3 || command -v python)
+          VERSION=$("$PY" -c 'import re; print(re.search(r"__version__ = \"(.+?)\"", open("lantern.py").read()).group(1))')
+          test -n "$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Build (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update && sudo apt-get install -y python3-tk python3-venv
-          python3 -m venv .venv && source .venv/bin/activate
+          /usr/bin/python3 -m venv .venv && source .venv/bin/activate
           ./build.sh
           mkdir out && cp dist/Lantern "out/Lantern-${{ steps.version.outputs.version }}-${{ matrix.name }}"
-
-      - uses: actions/setup-python@v5
-        if: runner.os != 'Linux'
-        with:
-          python-version: "3.12"
 
       - name: Build (macOS)
         if: runner.os == 'macOS'
@@ -80,7 +85,7 @@ jobs:
           copy dist\Lantern.exe "out\Lantern-${{ steps.version.outputs.version }}-${{ matrix.name }}.exe"
         shell: cmd
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Lantern-${{ matrix.name }}
           path: out/*
