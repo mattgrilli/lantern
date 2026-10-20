@@ -76,6 +76,31 @@ class PrefixDetectionTest(unittest.TestCase):
         self.assertIsNone(netscan.parse_prefix_for_ip(out, "192.168.1.13"))
 
 
+class DetectNetworkTest(unittest.TestCase):
+    def _detect(self, ip, output):
+        from unittest import mock
+        with mock.patch.object(netscan, "local_ipv4", return_value=ip), \
+                mock.patch.object(netscan, "_run", return_value=mock.Mock(stdout=output)):
+            return netscan.detect_local_network()
+
+    def test_normal_home_network(self):
+        net, ip, prefix = self._detect("192.168.1.13", "inet 192.168.1.13/24 brd 192.168.1.255")
+        self.assertEqual((str(net), ip, prefix), ("192.168.1.0/24", "192.168.1.13", 24))
+
+    def test_link_local_is_narrowed(self):
+        net, ip, prefix = self._detect("169.254.12.34", "inet 169.254.12.34/16 brd 169.254.255.255")
+        self.assertEqual((str(net), prefix), ("169.254.12.0/24", 16))
+
+    def test_medium_network_kept(self):
+        net, _, _ = self._detect("10.1.2.3", "inet 10.1.2.3/22 brd 10.1.3.255")
+        self.assertEqual(str(net), "10.1.0.0/22")
+
+    def test_no_ip(self):
+        from unittest import mock
+        with mock.patch.object(netscan, "local_ipv4", return_value=None):
+            self.assertEqual(netscan.detect_local_network(), (None, None, None))
+
+
 class ArpParsingTest(unittest.TestCase):
     def test_normalize(self):
         self.assertEqual(netscan.normalize_mac("a4:2b:b0:1:2:3"), "A4:2B:B0:01:02:03")

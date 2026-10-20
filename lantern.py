@@ -372,12 +372,21 @@ class LanternApp:
 
     # ----------------- Network detection -----------------
     def detect_local_network(self):
-        network, ip = netscan.detect_local_network()
-        if network:
-            self.network_var.set(str(network))
-            self.log_message(f"Your IP: {ip} — scanning range set to {network}")
-        else:
+        network, ip, prefix = netscan.detect_local_network()
+        if not network:
             self.log_message("Could not detect the local network; using 192.168.1.0/24")
+            return
+        self.network_var.set(str(network))
+        if ipaddress.IPv4Address(ip).is_link_local:
+            # 169.254.x.x is what an OS assigns itself when DHCP never answered.
+            self.log_message(f"WARNING: your IP is {ip}, a self-assigned address. This computer didn't get "
+                             "an address from the network; check Wi-Fi/Ethernet (or the VM's network settings).")
+            self.set_status("No network address from DHCP; check your connection")
+            return
+        self.log_message(f"Your IP: {ip} — scanning range set to {network}")
+        if prefix is not None and network.prefixlen != prefix:
+            self.log_message(f"Your network is /{prefix}; defaulting to the /24 around you. "
+                             f"Edit Targets to scan more.")
 
     # ----------------- Logging -----------------
     def log_message(self, message):

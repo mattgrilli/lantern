@@ -130,10 +130,15 @@ def parse_prefix_for_ip(output, ip):
 
 
 def detect_local_network():
-    """Return (IPv4Network, local ip) for the primary interface, or (None, None)."""
+    """Return (network, local ip, interface prefix) for the primary interface, or (None, None, None).
+
+    The network is narrowed to the /24 around this machine when the interface's
+    own network is huge (corporate /16s, link-local 169.254/16), since scanning
+    tens of thousands of addresses is rarely what anyone wants by default.
+    """
     ip = local_ipv4()
     if not ip:
-        return None, None
+        return None, None, None
     if IS_WINDOWS:
         cmd = ["ipconfig"]
     elif IS_LINUX and shutil.which("ip"):
@@ -145,10 +150,8 @@ def detect_local_network():
         prefix = parse_prefix_for_ip(_run(cmd, timeout=5).stdout, ip)
     except (OSError, subprocess.SubprocessError):
         pass
-    # Very wide prefixes (corporate /16s, VPNs) make for huge scans; /24 is a safer default.
-    if prefix is None or prefix < 16:
-        prefix = 24
-    return ipaddress.IPv4Network(f"{ip}/{prefix}", strict=False), ip
+    scan_prefix = 24 if prefix is None or prefix < 22 else prefix
+    return ipaddress.IPv4Network(f"{ip}/{scan_prefix}", strict=False), ip, prefix
 
 
 # ----------------- Ping -----------------
