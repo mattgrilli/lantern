@@ -332,7 +332,9 @@ def probe_host(ip, deep=True, known_printers=()):
         manufacturer = lookup_manufacturer(mac)
         open_ports = scan_ports(ip)
     dev_type = classify_device(hostname, manufacturer, open_ports)
-    if ip in known_printers:
+    # Computers sharing a printer also advertise it over mDNS, so only use the hint
+    # when nothing more specific was found.
+    if ip in known_printers and dev_type in (UNKNOWN, "Server/Web"):
         dev_type = "Printer"
     return {
         "ip": ip,
