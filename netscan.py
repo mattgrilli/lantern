@@ -37,7 +37,10 @@ COMMON_PORTS = {
     3306: "MySQL", 3389: "RDP", 5900: "VNC", 8080: "HTTP-Alt", 8443: "HTTPS-Alt",
     9100: "JetDirect",
 }
-PRINTER_PORTS = {515, 631, 9100}
+# 9100 (raw printing) and 515 (LPD) mean a printer. 631 (IPP) is also open on Macs
+# and Linux machines sharing a printer through CUPS, so on its own it's only a hint.
+PRINTER_PORTS = {515, 9100}
+COMPUTER_PORTS = {22, 139, 445, 548, 3389, 5900}
 PRINTER_SERVICES = ["_ipp._tcp.local.", "_ipps._tcp.local.", "_printer._tcp.local.", "_pdl-datastream._tcp.local."]
 
 _MAC_RE = re.compile(r"(?<![0-9A-Fa-f:-])(?:[0-9A-Fa-f]{1,2}[:-]){5}[0-9A-Fa-f]{1,2}(?![0-9A-Fa-f:-])")
@@ -292,6 +295,8 @@ def classify_device(hostname, manufacturer, open_ports):
     ports = set(open_ports or ())
 
     if ports & PRINTER_PORTS or vendor in _PRINTER_VENDORS:
+        return "Printer"
+    if 631 in ports and not ports & COMPUTER_PORTS and vendor not in _COMPUTER_VENDORS | _VM_VENDORS:
         return "Printer"
     if _has(host, ("print", "laserjet", "officejet", "deskjet", "mfc-", "xerox", "lexmark", "kyocera")):
         return "Printer"

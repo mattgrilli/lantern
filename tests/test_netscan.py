@@ -113,6 +113,14 @@ class ClassifyTest(unittest.TestCase):
     def test_printer_ports(self):
         self.assertEqual(netscan.classify_device("Unknown", "HP", [80, 9100]), "Printer")
 
+    def test_ipp_only_printer(self):
+        self.assertEqual(netscan.classify_device("Unknown", "Unknown", [80, 631]), "Printer")
+
+    def test_mac_sharing_a_printer_is_not_a_printer(self):
+        self.assertNotEqual(netscan.classify_device("Unknown", "Unknown", [22, 631]), "Printer")
+        self.assertEqual(netscan.classify_device("Unknown", "Apple", [631]), "Computer")
+        self.assertEqual(netscan.classify_device("Unknown", "Parallels", [631]), "Virtual Machine")
+
     def test_hp_computer_is_not_a_printer(self):
         self.assertEqual(netscan.classify_device("Unknown", "HP", [139, 445]), "Computer")
 
