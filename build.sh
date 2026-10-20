@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build a standalone Lantern app with PyInstaller.
 # macOS: dist/Lantern.app   Linux: dist/Lantern
-# (Windows: py -m PyInstaller --name Lantern --windowed --onefile lantern.py)
+# (Windows: py -m PyInstaller --name Lantern --windowed --onefile --collect-submodules zeroconf lantern.py)
 
 set -e
 cd "$(dirname "$0")"
@@ -26,12 +26,13 @@ if ! python3 -m PyInstaller --version &> /dev/null; then
     python3 -m pip install pyinstaller
 fi
 
-# zeroconf is optional; bundle it when it's installed so the app gets mDNS everywhere.
-EXTRA=()
-if python3 -c 'import zeroconf' &> /dev/null; then
-    echo "✓ Bundling zeroconf for mDNS printer discovery"
-    EXTRA+=(--collect-submodules zeroconf)
+# zeroconf is optional when running from source, but built apps always bundle it
+# so mDNS printer discovery works out of the box.
+if ! python3 -c 'import zeroconf' &> /dev/null; then
+    echo "📦 Installing zeroconf..."
+    python3 -m pip install zeroconf
 fi
+echo "✓ Bundling zeroconf for mDNS printer discovery"
 
 rm -rf build/ dist/ Lantern.spec
 
@@ -42,7 +43,7 @@ python3 -m PyInstaller \
     --clean \
     --noconfirm \
     --osx-bundle-identifier="com.lantern.networkscanner" \
-    "${EXTRA[@]}" \
+    --collect-submodules zeroconf \
     lantern.py
 
 if [ "$(uname)" = "Darwin" ]; then

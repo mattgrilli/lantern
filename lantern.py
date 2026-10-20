@@ -77,7 +77,7 @@ class LanternApp:
         if backend:
             self.log_message(f"mDNS printer discovery: {backend}")
         else:
-            self.log_message("mDNS printer discovery off (pip install zeroconf to enable)")
+            self.log_message("mDNS printer discovery is off (optional: pip install zeroconf)")
 
     # ----------------- Thread-safe UI dispatch -----------------
     def ui(self, fn, *args, **kwargs):

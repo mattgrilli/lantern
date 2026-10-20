@@ -48,7 +48,7 @@ cd lantern
 python3 lantern.py
 ```
 
-Lantern only uses the Python standard library. Two optional extras:
+Running from source needs only the Python standard library. Two optional extras:
 
 - **mDNS on Windows and Linux**: `pip install zeroconf` (macOS already uses the built-in `dns-sd`)
 - **Linux**: tkinter may be a separate package (`sudo dnf install python3-tkinter` or `sudo apt install python3-tk`)
@@ -66,7 +66,9 @@ Download the latest build from [Releases](https://github.com/mattgrilli/lantern/
 ./create_dmg.sh     # macOS only: package the app as a DMG
 ```
 
-On Windows: `py -m pip install pyinstaller` then `py -m PyInstaller --name Lantern --windowed --onefile lantern.py`.
+On Windows: `py -m pip install pyinstaller zeroconf` then `py -m PyInstaller --name Lantern --windowed --onefile --collect-submodules zeroconf lantern.py`.
+
+Built apps always include zeroconf, so mDNS printer discovery works without installing anything.
 
 ## 📖 Usage
 
