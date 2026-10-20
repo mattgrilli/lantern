@@ -15,7 +15,7 @@ fi
 
 cd "$(dirname "$0")"
 
-VERSION=$(python3 -c 'import re; print(re.search(r"__version__ = \"(.+?)\"", open("lantern.py").read()).group(1))')
+VERSION=$(python3 -c 'import re; print(re.search(r"__version__ = \"(.+?)\"", open("lantern.py", encoding="utf-8").read()).group(1))')
 DMG_NAME="Lantern-${VERSION}"
 
 # Create temporary DMG directory

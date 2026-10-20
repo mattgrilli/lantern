@@ -57,7 +57,7 @@ jobs:
         shell: bash
         run: |
           PY=$(command -v python || command -v python3)  # Windows' python3 can be a Store stub
-          VERSION=$("$PY" -c 'import re; print(re.search(r"__version__ = \"(.+?)\"", open("lantern.py").read()).group(1))')
+          VERSION=$("$PY" -c 'import re; print(re.search(r"__version__ = \"(.+?)\"", open("lantern.py", encoding="utf-8").read()).group(1))')
           test -n "$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 

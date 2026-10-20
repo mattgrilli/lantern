@@ -44,7 +44,9 @@ _MAC_RE = re.compile(r"(?<![0-9A-Fa-f:-])(?:[0-9A-Fa-f]{1,2}[:-]){5}[0-9A-Fa-f]{
 
 
 def _run(args, timeout):
-    return subprocess.run(args, capture_output=True, text=True, timeout=timeout,
+    # errors="replace": Windows tools print in the console code page, which may not
+    # match Python's default decoding (e.g. non-English ipconfig output).
+    return subprocess.run(args, capture_output=True, text=True, errors="replace", timeout=timeout,
                           creationflags=SUBPROCESS_FLAGS)
 
 
@@ -376,7 +378,7 @@ def _zeroconf_printer_ips(seconds):
 def _dns_sd_instances(service, seconds):
     """Names advertised for `service` according to macOS `dns-sd -B`."""
     proc = subprocess.Popen(["dns-sd", "-B", service], stdout=subprocess.PIPE,
-                            stderr=subprocess.DEVNULL, text=True)
+                            stderr=subprocess.DEVNULL, text=True, errors="replace")
     time.sleep(seconds)
     proc.terminate()
     out, _ = proc.communicate(timeout=2)

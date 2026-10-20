@@ -19,7 +19,7 @@ if ! python3 -c 'import sys; sys.exit(sys.version_info < (3, 9))'; then
     exit 1
 fi
 
-VERSION=$(python3 -c 'import re; print(re.search(r"__version__ = \"(.+?)\"", open("lantern.py").read()).group(1))')
+VERSION=$(python3 -c 'import re; print(re.search(r"__version__ = \"(.+?)\"", open("lantern.py", encoding="utf-8").read()).group(1))')
 echo "✓ Lantern $VERSION, $(python3 --version)"
 
 if ! python3 -m PyInstaller --version &> /dev/null; then
