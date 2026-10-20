@@ -265,11 +265,17 @@ def reverse_dns(ip):
 
 # ----------------- Device classification -----------------
 
-_PRINTER_VENDORS = {"Brother", "Canon", "Epson", "Xerox", "Kyocera", "Lexmark", "Silex Technology"}
-_NETWORK_VENDORS = {"Cisco", "Netgear", "Ubiquiti", "D-Link", "TP-Link", "Fortinet", "MikroTik", "Linksys"}
+# Vendor names as oui.py returns them (see BRANDS in tools/update_oui.py).
+_PRINTER_VENDORS = {"Brother", "Canon", "Epson", "Xerox", "Kyocera", "Lexmark", "Ricoh", "Konica Minolta",
+                    "Zebra", "Silex Technology"}
+_NETWORK_VENDORS = {"Cisco", "Cisco Meraki", "Netgear", "Ubiquiti", "D-Link", "TP-Link", "Fortinet", "MikroTik",
+                    "Linksys", "Arcadyan", "Arris", "eero", "Aruba", "Juniper", "SonicWall", "Palo Alto Networks",
+                    "Sagemcom", "Technicolor", "Commscope"}
 _VM_VENDORS = {"VMware", "VirtualBox", "Parallels", "QEMU/KVM", "Microsoft Hyper-V"}
-_COMPUTER_VENDORS = {"Apple", "Dell", "Microsoft", "Intel", "Lenovo", "HP", "IBM", "Shuttle", "Quanta"}
-_IOT_VENDORS = {"Espressif", "Raspberry Pi", "Google", "LIFX", "Texas Instruments"}
+_COMPUTER_VENDORS = {"Apple", "Dell", "Microsoft", "Intel", "Lenovo", "HP", "IBM", "Shuttle", "Quanta",
+                     "MSI", "Gigabyte", "ASUS", "Acer", "Framework Computer"}
+_SMART_VENDORS = {"Amazon", "Google", "Sonos", "Roku", "Philips Hue", "Ring", "Wyze", "ecobee", "LIFX", "Nintendo"}
+_IOT_VENDORS = {"Espressif", "Raspberry Pi", "Texas Instruments", "Tuya"}
 
 
 def _has(text, words):
@@ -300,11 +306,15 @@ def classify_device(hostname, manufacturer, open_ports):
     if _has(host, ("echo", "alexa", "chromecast", "google-home", "roku", "firetv", "appletv", "apple-tv",
                    "sonos", "hue", "nest", "wyze", "esp-", "esp32", "esp8266", "raspberrypi")):
         return "Smart Device"
+    if vendor in _SMART_VENDORS:
+        return "Smart Device"
     if vendor in _IOT_VENDORS:
         return "IoT Device"
     if ports & {3389, 5900, 548} or {139, 445} <= ports:
         return "Computer"
     if _has(host, ("desktop", "laptop", "macbook", "imac", "mac-mini", "workstation", "-pc", "pc-")):
+        return "Computer"
+    if host.split(".")[0] in ("mac", "pc"):
         return "Computer"
     if vendor in _COMPUTER_VENDORS:
         return "Computer"

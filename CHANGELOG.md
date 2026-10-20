@@ -9,7 +9,7 @@ One app for every platform: the separate macOS, Windows and cross-platform scrip
 - Scan targets can be IP ranges (`10.0.0.1-50`) and comma-separated lists, not just CIDRs
 - Device notes and manual type override (right-click a device)
 - Optional `zeroconf` support for mDNS printer discovery on all platforms
-- Larger manufacturer table (585 prefixes) and detection of private/randomized MACs
+- Manufacturer lookup from the full IEEE registry (~40,000 vendors) and detection of private/randomized MACs
 - More device types: NAS, Mobile, Smart Device, IoT, Virtual Machine
 - Devices that stop answering are marked offline; new "Offline" filter
 - Monitoring logs when a device comes back online, and only alerts on changes

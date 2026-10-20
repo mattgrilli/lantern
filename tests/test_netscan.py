@@ -131,6 +131,13 @@ class ClassifyTest(unittest.TestCase):
     def test_web_only(self):
         self.assertEqual(netscan.classify_device("Unknown", "Unknown", [443]), "Server/Web")
 
+    def test_plain_mac_hostname(self):
+        self.assertEqual(netscan.classify_device("Mac.lan", "Private (randomized)", []), "Computer")
+        self.assertEqual(netscan.classify_device("Machine-7", "Unknown", []), "Unknown")
+
+    def test_smart_speaker_by_vendor(self):
+        self.assertEqual(netscan.classify_device("Unknown", "Amazon", []), "Smart Device")
+
     def test_unknown_hostname_does_not_match_keywords(self):
         self.assertEqual(netscan.classify_device("Unknown", "Unknown", None), "Unknown")
 
@@ -150,7 +157,8 @@ class MiscTest(unittest.TestCase):
         self.assertEqual(lookup_manufacturer("b8:27:eb:00:00:01"), "Raspberry Pi")
         self.assertEqual(lookup_manufacturer("Unknown"), "Unknown")
         self.assertEqual(lookup_manufacturer("2A:80:26:F5:1C:6F"), "Private (randomized)")
-        self.assertEqual(lookup_manufacturer("9C:B6:54:15:02:50"), "Unknown")
+        self.assertEqual(lookup_manufacturer("9C:B6:54:15:02:50"), "HP")         # from the IEEE registry
+        self.assertEqual(lookup_manufacturer("8C:86:DD:C3:ED:A0"), "TP-Link")    # brand name normalized
 
     def test_ping_command_has_target_last(self):
         cmd = netscan.ping_command("10.0.0.1", 1, 1.0)

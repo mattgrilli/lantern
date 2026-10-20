@@ -1,9 +1,19 @@
 """MAC address prefix (OUI) to manufacturer lookup.
 
-A small hand-maintained subset of the IEEE registry covering common home and
-office hardware. Add prefixes to the vendor they belong to; keep vendor names
-consistent, since device-type detection matches on them.
+Names come from the IEEE registry bundled as data/oui.txt.gz (refresh it with
+tools/update_oui.py). The hand-maintained table below is the fallback when that
+file is missing, and covers a few prefixes the registry lists under odd names.
+Keep vendor names consistent with tools/update_oui.py's BRANDS, since
+device-type detection matches on them.
 """
+
+import gzip
+import sys
+from pathlib import Path
+
+# PyInstaller unpacks bundled files to sys._MEIPASS; from source they sit next to this file.
+DATA_FILE = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "data" / "oui.txt.gz"
+_registry = None
 
 _VENDORS = {
     "Aplix": "00:1C:4D",
@@ -160,11 +170,27 @@ _VENDORS = {
 OUI_TABLE = {prefix: vendor for vendor, prefixes in _VENDORS.items() for prefix in prefixes.split()}
 
 
+def _load_registry():
+    """The IEEE table as {prefix: vendor}, read once on first use."""
+    global _registry
+    if _registry is None:
+        _registry = {}
+        try:
+            with gzip.open(DATA_FILE, "rt", encoding="utf-8") as f:
+                for line in f:
+                    prefix, _, vendor = line.rstrip("\n").partition("\t")
+                    _registry[prefix] = vendor
+        except OSError:
+            pass  # fall back to OUI_TABLE alone
+    return _registry
+
+
 def lookup_manufacturer(mac):
     """Return the vendor for a normalized MAC (AA:BB:CC:DD:EE:FF), or "Unknown"."""
     if not mac or mac == "Unknown":
         return "Unknown"
-    vendor = OUI_TABLE.get(mac[:8].upper())
+    prefix = mac[:8].upper()
+    vendor = _load_registry().get(prefix) or OUI_TABLE.get(prefix)
     if vendor:
         return vendor
     # The "locally administered" bit marks a made-up address, which is what phones,

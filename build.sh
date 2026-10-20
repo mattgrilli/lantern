@@ -2,7 +2,7 @@
 # Build a standalone Lantern app with PyInstaller.
 # macOS: dist/Lantern.app   Linux: dist/Lantern
 # (Windows: py -m PyInstaller --name Lantern --windowed --onefile --collect-submodules zeroconf
-#           --add-data "assets;assets" --icon assets\lantern.ico lantern.py)
+#           --add-data "assets;assets" --add-data "data;data" --icon assets\lantern.ico lantern.py)
 
 set -e
 cd "$(dirname "$0")"
@@ -52,6 +52,7 @@ python3 -m PyInstaller \
     --osx-bundle-identifier="com.lantern.networkscanner" \
     --collect-submodules zeroconf \
     --add-data "assets:assets" \
+    --add-data "data:data" \
     --icon assets/lantern-512.png \
     lantern.py
 

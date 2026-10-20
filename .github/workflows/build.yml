@@ -80,7 +80,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           python -m pip install pyinstaller zeroconf
-          python -m PyInstaller --name Lantern --windowed --onefile --clean --noconfirm --collect-submodules zeroconf --add-data "assets;assets" --icon assets\lantern.ico lantern.py
+          python -m PyInstaller --name Lantern --windowed --onefile --clean --noconfirm --collect-submodules zeroconf --add-data "assets;assets" --add-data "data;data" --icon assets\lantern.ico lantern.py
           mkdir out
           copy dist\Lantern.exe "out\Lantern-${{ steps.version.outputs.version }}-${{ matrix.name }}.exe"
         shell: cmd

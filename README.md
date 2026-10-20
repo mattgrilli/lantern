@@ -15,7 +15,7 @@ Lantern lights up your network: discover devices, identify manufacturers, watch 
 ### Scanning
 - 🔍 **Fast multi-threaded scanning** of a CIDR (`192.168.1.0/24`), a range (`10.0.0.1-50` or `10.0.0.1-10.0.1.20`) or a comma-separated mix
 - 🌐 **Auto-detects your network** on startup
-- 🏷️ **Manufacturer lookup** from the MAC address, including spotting phones and laptops using private (randomized) addresses
+- 🏷️ **Manufacturer lookup** from the full IEEE registry (~40,000 vendors), including spotting phones and laptops using private (randomized) addresses
 - 🔬 **Deep scan**: MAC address, manufacturer, reverse DNS and common open ports
 - 🎯 **Device types**: Printer, Computer, Server, Network gear, NAS, Mobile, Smart Device, IoT, Virtual Machine
 - 🖨️ **mDNS printer discovery** so printers show up first
@@ -77,7 +77,7 @@ On Windows:
 
 ```bat
 py -m pip install pyinstaller zeroconf
-py -m PyInstaller --name Lantern --windowed --onefile --collect-submodules zeroconf --add-data "assets;assets" --icon assets\lantern.ico lantern.py
+py -m PyInstaller --name Lantern --windowed --onefile --collect-submodules zeroconf --add-data "assets;assets" --add-data "data;data" --icon assets\lantern.ico lantern.py
 ```
 
 Built apps always include zeroconf, so mDNS printer discovery works without installing anything.
@@ -136,7 +136,7 @@ Data saved by older versions of Lantern in these locations is picked up automati
 
 **No devices found**: check the target range, and note that some devices (and Windows PCs with the default firewall) don't answer ping, so they won't appear.
 
-**Manufacturer shows "Unknown"**: the MAC prefix isn't in Lantern's built-in table ([oui.py](oui.py)). PRs adding prefixes are welcome. "Private (randomized)" means the device is hiding its real MAC, which is normal for phones and tablets.
+**Manufacturer shows "Unknown"**: the MAC prefix isn't in the bundled IEEE registry. `python3 tools/update_oui.py` refreshes it. "Private (randomized)" means the device is hiding its real MAC, which is normal for phones and tablets.
 
 **No MAC address**: MACs come from the ARP table, so they're only available for devices on the same local subnet as you. Your own machine shows as Unknown.
 
@@ -152,13 +152,12 @@ python3 -m unittest discover -s tests
 
 - [lantern.py](lantern.py): the Tkinter GUI
 - [netscan.py](netscan.py): ping, ARP, port checks, mDNS and device classification (no GUI code)
-- [oui.py](oui.py): MAC prefix → manufacturer table
+- [oui.py](oui.py): MAC prefix → manufacturer lookup, backed by `data/oui.txt.gz` from the IEEE registry ([tools/update_oui.py](tools/update_oui.py) refreshes it)
 
 ## 🤝 Contributing
 
 Contributions are welcome! Ideas:
 
-- [ ] More manufacturer prefixes in `oui.py`
 - [ ] Better device-type detection
 - [ ] JSON export
 - [ ] SNMP device queries
