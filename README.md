@@ -61,7 +61,9 @@ Want to look around without scanning anything? `python3 lantern.py --demo` opens
 
 Download the latest build from [Releases](https://github.com/mattgrilli/lantern/releases).
 
-> **macOS Gatekeeper:** the first time, right-click the app and choose **Open**.
+> **macOS "could not verify" warning:** Lantern isn't notarized by Apple yet. Open it once and dismiss the warning, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**. Or run `xattr -dr com.apple.quarantine /Applications/Lantern.app` in Terminal.
+>
+> **Windows SmartScreen:** click **More info → Run anyway**.
 
 ### Build it yourself
 
