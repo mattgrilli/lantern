@@ -13,12 +13,14 @@ if [ ! -d "dist/Lantern.app" ]; then
     exit 1
 fi
 
-# Get version (you can modify this)
-VERSION="1.0.0"
+cd "$(dirname "$0")"
+
+VERSION=$(python3 -c 'import re; print(re.search(r"__version__ = \"(.+?)\"", open("lantern.py", encoding="utf-8").read()).group(1))')
 DMG_NAME="Lantern-${VERSION}"
 
 # Create temporary DMG directory
 echo "📁 Creating DMG structure..."
+rm -rf dist/dmg
 mkdir -p dist/dmg
 cp -r dist/Lantern.app dist/dmg/
 

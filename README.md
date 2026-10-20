@@ -1,216 +1,168 @@
 # 🏮 Lantern
 
-**A powerful network scanner for macOS with device monitoring and management**
+![Lantern scanning a sample office network](docs/hero.png)
 
-Lantern illuminates your network - discover devices, identify manufacturers, monitor uptime, and manage your network infrastructure with an intuitive GUI.
+**A network scanner for macOS, Windows and Linux with device labels, monitoring and scan history**
+
+Lantern lights up your network: discover devices, identify manufacturers, watch the ones that matter, and see what changed between scans, all from a simple desktop GUI.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)
-![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)
+![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
 
 ## ✨ Features
 
-### Core Scanning
-- 🔍 **Fast Network Scanning** - Multi-threaded scanning with configurable speed
-- 🏷️ **Device Identification** - Automatic manufacturer detection via MAC address
-- 🔬 **Deep Scanning** - Port scanning, hostname resolution, service detection
-- 🎯 **Smart Device Types** - Automatically identifies Printers, Computers, Servers, IoT devices, and more
+### Scanning
+- 🔍 **Fast multi-threaded scanning** of a CIDR (`192.168.1.0/24`), a range (`10.0.0.1-50` or `10.0.0.1-10.0.1.20`) or a comma-separated mix
+- 🌐 **Auto-detects your network** on startup
+- 🏷️ **Manufacturer lookup** from the full IEEE registry (~40,000 vendors), including spotting phones and laptops using private (randomized) addresses
+- 🔬 **Deep scan**: MAC address, manufacturer, reverse DNS and common open ports
+- 🎯 **Device types**: Printer, Computer, Server, Network gear, NAS, Mobile, Smart Device, IoT, Virtual Machine
+- 🖨️ **mDNS printer discovery** so printers show up first
 
 ### Device Management
-- 📝 **Custom Labels** - Name your devices (e.g., "Office Xerox", "Living Room TV")
-- ⭐ **Watch List** - Mark important devices for monitoring
-- 📋 **Device Notes** - Add documentation for each device
-- 🏷️ **Type Override** - Manually set device types when auto-detection isn't perfect
+- 📝 **Labels**: name your devices ("Office Xerox", "Living Room TV")
+- 🗒️ **Notes**: keep documentation for each device
+- 🏷️ **Type override** for when auto-detection guesses wrong
+- ⭐ **Watch list** for the devices you care about
 
 ### Monitoring & History
-- 👁️ **Live Monitoring** - Continuous monitoring of watched devices with offline alerts
-- 📊 **Scan Comparison** - Compare scans to see what's new or missing
-- 📈 **Scan History** - Automatically saves last 50 scans
-- ⏰ **Last Seen** - Track when devices were last active
+- 👁️ **Live monitoring** of watched devices every 60 seconds, with an alert (and a beep) when one goes offline and a note when it comes back
+- 📊 **Scan comparison**: pick any two saved scans to see new devices, missing devices and IP changes
+- 📈 **Scan history**: the last 50 scans are saved automatically
+- ○ **Offline marking**: devices from earlier scans that stop answering are greyed out
 
-### Profiles & Export
-- 💾 **Network Profiles** - Save and switch between different network configurations
-- 📄 **CSV Export** - Export all results with labels, notes, and metadata
-- 📋 **Quick Actions** - One-click copy IP/MAC, open web interfaces, ping devices
-
-### Advanced Filtering
-- 🔍 **Text Search** - Search by IP, MAC, hostname, manufacturer, label, or notes
-- 🖨️ **Type Filters** - Show only Printers, Computers, Watched devices, or New devices
-- 🎨 **Visual Indicators** - Color-coded new devices, starred watched devices
+### Profiles, Filters & Export
+- 💾 **Profiles**: save target, thread count and deep-scan setting for Home, Office, Guest…
+- 🔎 **Search** across IP, MAC, hostname, manufacturer, type, label and notes
+- 🧮 **Quick filters**: All, Printers, Watched, New, Offline
+- ↕️ **Sort** by any column
+- 📄 **CSV export** with labels, notes and watch status
+- 📋 **Quick actions**: copy IP/MAC/hostname, open the device's web page, ping
 
 ## 🚀 Quick Start
 
-### Option 1: Run Directly (Requires Python 3)
+### Run from source (Python 3.9+)
 
 ```bash
-# Clone the repository
 git clone https://github.com/mattgrilli/lantern.git
 cd lantern
-
-# Run Lantern
 python3 lantern.py
 ```
 
-That's it! No dependencies needed - uses only Python standard library.
+Running from source needs only the Python standard library. Two optional extras:
 
-### Option 2: Standalone App (No Python Required)
+- **mDNS on Windows and Linux**: `pip install zeroconf` (macOS already uses the built-in `dns-sd`)
+- **Linux**: tkinter may be a separate package (`sudo dnf install python3-tkinter` or `sudo apt install python3-tk`)
 
-Download the latest `.app` bundle from [Releases](https://github.com/mattgrilli/lantern/releases) and drag to Applications.
+Want to look around without scanning anything? `python3 lantern.py --demo` opens Lantern with a sample office network. Nothing is scanned or saved.
 
-> **Note for macOS Gatekeeper:** First time opening, right-click the app and select "Open" to bypass Gatekeeper warnings.
+### Standalone app
 
-## 📖 Usage Guide
+Download the latest build from [Releases](https://github.com/mattgrilli/lantern/releases).
 
-### First Scan
-1. **Launch Lantern** - It auto-detects your network range
-2. **Click "▶️ Start Scan"** - Scanning begins immediately
-3. **Review Results** - Devices appear in real-time as they're found
+> **macOS "could not verify" warning:** Lantern isn't notarized by Apple yet. Open it once and dismiss the warning, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**. Or run `xattr -dr com.apple.quarantine /Applications/Lantern.app` in Terminal.
+>
+> **Windows SmartScreen:** click **More info → Run anyway**.
 
-### Label Your Devices
-- **Right-click any device** → "Set Label/Nickname"
-- Give it a friendly name like "Office Printer" or "Bob's Laptop"
-- Labels are saved and persist across scans
+### Build it yourself
 
-### Monitor Important Devices
-1. **Right-click a device** → "Add to Watch List"
-2. **Click "👁️ Start Monitoring"** to begin continuous monitoring
-3. Get alerts in the log if watched devices go offline
+```bash
+./build.sh          # macOS → dist/Lantern.app, Linux → dist/Lantern
+./create_dmg.sh     # macOS only: package the app as a DMG
+./install-linux.sh  # Linux only: add Lantern to your app menu
+```
 
-### Compare Scans
-- Run multiple scans throughout the day
-- Click **"📊 Compare"** to see:
-  - 🆕 New devices that appeared
-  - 📴 Devices that went offline
-  - Summary statistics
+On Windows:
 
-### Save Network Profiles
-- Set up your network range and threads
-- Click **"💾 Save Profile"**
-- Quickly switch between Home, Office, Guest networks
+```bat
+py -m pip install pyinstaller zeroconf
+py -m PyInstaller --name Lantern --windowed --onefile --collect-submodules zeroconf --add-data "assets;assets" --add-data "data;data" --icon assets\lantern.ico lantern.py
+```
 
-### Export Results
-- Click **"📄 Export CSV"** to save all results
-- Includes labels, notes, watch status, and full device info
-- Import into Excel, Numbers, or database tools
+Built apps always include zeroconf, so mDNS printer discovery works without installing anything.
 
-## 🎯 Use Cases
+## 📖 Usage
 
-### Home Users
-- Find that printer you can't remember the IP for
-- Identify unknown devices on your WiFi
-- Monitor when kids' devices come online
-- Track smart home device uptime
+### First scan
+1. **Launch Lantern**. It fills in your network range automatically.
+2. Click **▶ Start Scan** (or press ⌘R / Ctrl+R).
+3. Devices appear as they're found. New devices since your last scan are highlighted in blue.
 
-### IT Professionals
-- Quick network audits
-- Device inventory management
-- Troubleshoot network issues
-- Monitor critical infrastructure
-- Compare network states before/after changes
+### Right-click a device to
+- **Set Label…** / **Edit Notes…** / **Set Type**
+- **Toggle Watch List**
+- Copy its IP, MAC, hostname or everything
+- Open it in a browser (HTTP or HTTPS), or ping it
 
-### Small Business
-- Track office equipment
-- Monitor printer availability
-- Document network infrastructure
-- Identify unauthorized devices
+Double-click a device to open its web interface.
 
-## 🔧 Advanced Features
+### Monitor devices
+Add devices to the watch list, then click **👁 Start Monitoring**. Lantern checks them every 60 seconds and logs an alert when one goes down.
 
-### Deep Scan Mode
-Enable "🔬 Deep Scan" to detect:
-- Open ports and services
-- MAC addresses
-- Device manufacturers
-- Device type classification
+### Compare scans
+Every completed scan is saved. Click **📊 Compare Scans** and choose two scans to see what appeared, disappeared or moved to a new IP.
 
-**Scanned Ports:**
-- 21 (FTP), 22 (SSH), 23 (Telnet)
-- 80 (HTTP), 443 (HTTPS), 8080 (HTTP-Alt)
-- 445 (SMB), 139 (NetBIOS)
-- 515 (LPR), 631 (IPP), 9100 (Printer)
-- 3389 (RDP), 161 (SNMP), 5000 (UPnP)
+### Keyboard shortcuts
+| Shortcut | Action |
+|---|---|
+| ⌘R / Ctrl+R | Start scan |
+| Esc | Stop scan |
+| ⌘F / Ctrl+F | Focus the filter box |
+| ⌘E / Ctrl+E | Export CSV |
 
-### Thread Control
-- **10 threads** = Slow but thorough (stealth mode)
-- **50 threads** = Balanced (default)
-- **100+ threads** = Fast scans for large networks
+## 🔧 Details
 
+### Ports checked in deep scan
+21 FTP · 22 SSH · 23 Telnet · 25 SMTP · 53 DNS · 80 HTTP · 139 NetBIOS · 443 HTTPS · 445 SMB · 515 LPR · 548 AFP · 631 IPP · 3306 MySQL · 3389 RDP · 5900 VNC · 8080 HTTP-Alt · 8443 HTTPS-Alt · 9100 JetDirect
 
+### Threads
+- **10–25**: gentle, for slow or busy networks
+- **50**: balanced (default)
+- **100+**: fast scans of large ranges
 
-## 📊 Supported Devices
+### Data storage
+Labels, notes, type overrides, the watch list, profiles and scan history are saved as JSON in:
 
-Lantern can identify devices from 60+ manufacturers including:
+| OS | Location |
+|---|---|
+| macOS | `~/Library/Application Support/LanternScanner/scanner_data.json` |
+| Windows | `%APPDATA%\LanternScanner\scanner_data.json` |
+| Linux | `~/.config/LanternScanner/scanner_data.json` |
 
-**Printers:** Xerox, HP, Brother, Canon, Epson, Kyocera, Lexmark  
-**Computers:** Apple, Dell, HP, Lenovo, Microsoft  
-**Network:** Cisco, Ubiquiti, Netgear, D-Link, Fortinet  
-**IoT/Other:** Samsung, Polycom, VMware, and more
-
-Don't see your device manufacturer? It will still be detected - just shown as "Unknown" manufacturer. You can manually set labels and types!
+Data saved by older versions of Lantern in these locations is picked up automatically.
 
 ## 🐛 Troubleshooting
 
-### "No devices found"
-- Check that you're on the correct network
-- Verify network range (e.g., `192.168.1.0/24`)
-- Try increasing thread count
-- Some devices block ICMP ping - they won't be detected
+**No devices found**: check the target range, and note that some devices (and Windows PCs with the default firewall) don't answer ping, so they won't appear.
 
-### "Unknown manufacturer"
-- MAC address OUI not in our database
-- Still functional - use custom labels!
-- Feel free to submit OUI additions via PR
+**Manufacturer shows "Unknown"**: the MAC prefix isn't in the bundled IEEE registry. `python3 tools/update_oui.py` refreshes it. "Private (randomized)" means the device is hiding its real MAC, which is normal for phones and tablets.
 
-### Slow scanning
-- Reduce thread count if network is unstable
-- Large networks (/16) take longer - consider scanning /24 subnets
-- Deep scan adds ~0.5s per device
+**No MAC address**: MACs come from the ARP table, so they're only available for devices on the same local subnet as you. Your own machine shows as Unknown.
 
-### Monitoring not alerting
-- Ensure devices are in Watch List (⭐ icon)
-- Check that device IPs haven't changed (DHCP)
-- Monitoring checks every 60 seconds
+**Monitoring says a device is offline but it isn't**: the device may have a new IP from DHCP. Run a scan to refresh it.
 
-## 💾 Data Storage
+## 🧪 Development
 
-Lantern saves your data locally in `scanner_data.json`:
-- Device labels and nicknames
-- Custom device types
-- Device notes
-- Watch list
-- Saved profiles
-- Last 50 scan history
+```bash
+python3 -m unittest discover -s tests
+```
 
-**Location:** Same directory as `lantern.py`  
-**Format:** Human-readable JSON
+`python3 lantern.py --demo` loads a made-up network ([demo.py](demo.py)), which is how the screenshots are made.
+
+- [lantern.py](lantern.py): the Tkinter GUI
+- [netscan.py](netscan.py): ping, ARP, port checks, mDNS and device classification (no GUI code)
+- [oui.py](oui.py): MAC prefix → manufacturer lookup, backed by `data/oui.txt.gz` from the IEEE registry ([tools/update_oui.py](tools/update_oui.py) refreshes it)
 
 ## 🤝 Contributing
 
-Contributions are welcome! Areas we'd love help with:
+Contributions are welcome! Ideas:
 
-- [ ] Additional manufacturer OUI database entries
-- [ ] Device type detection improvements  
-- [ ] Keyboard shortcut implementation
-- [ ] Dark mode theme optimization
-- [ ] Additional export formats (JSON, XML)
-- [ ] SNMP device querying
-- [ ] Network topology visualization
+- [ ] Better device-type detection
+- [ ] JSON export
+- [ ] SNMP device queries
+- [ ] Network topology view
 
 ## 📜 License
 
-MIT License - See LICENSE file for details
-
-## 🙏 Acknowledgments
-
-Built with Python's tkinter and standard library - no external dependencies!
-
-Inspired by the lack of good, free network scanners for macOS.
-
-## 📞 Support
-
-- **Issues:** [GitHub Issues](https://github.com/mattgrilli/lantern/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/mattgrilli/lantern/discussions)
-
----
-
-**Made with ☕ for macOS network admins and power users**
+MIT. See [LICENSE](LICENSE).

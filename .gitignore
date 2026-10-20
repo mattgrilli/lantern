@@ -30,6 +30,8 @@ Icon
 *.jpg
 *.jpeg
 *.png
+!assets/*.png
+!docs/*.png
 *.gif
 
 # IDE

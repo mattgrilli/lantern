@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Lantern
+GenericName=Network Scanner
+Comment=Discover, label and monitor devices on your network
+Exec=lantern
+Icon=lantern
+Terminal=false
+Categories=Network;System;Monitor;
+Keywords=network;scanner;ip;lan;printer;
+StartupWMClass=lantern

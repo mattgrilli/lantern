@@ -1,36 +1,48 @@
 #!/bin/bash
-# Build script for Lantern Network Scanner
-# Creates a standalone macOS .app bundle
+# Build a standalone Lantern app with PyInstaller.
+# macOS: dist/Lantern.app   Linux: dist/Lantern
+# (Windows: py -m PyInstaller --name Lantern --windowed --onefile --collect-submodules zeroconf
+#           --add-data "assets;assets" --add-data "data;data" --icon assets\lantern.ico lantern.py)
 
-set -e  # Exit on error
+set -e
+cd "$(dirname "$0")"
 
-echo "🏮 Building Lantern Network Scanner..."
+echo "🏮 Building Lantern..."
 
-# Check if Python 3 is installed
 if ! command -v python3 &> /dev/null; then
-    echo "❌ Error: Python 3 is required but not installed."
-    echo "Install from: https://www.python.org/downloads/"
+    echo "❌ Python 3 is required: https://www.python.org/downloads/"
     exit 1
 fi
 
-# Check Python version
-PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-echo "✓ Found Python $PYTHON_VERSION"
-
-# Install PyInstaller if not present
-if ! python3 -m pip show pyinstaller &> /dev/null; then
-    echo "📦 Installing PyInstaller..."
-    python3 -m pip install pyinstaller
-else
-    echo "✓ PyInstaller already installed"
+if ! python3 -c 'import sys; sys.exit(sys.version_info < (3, 9))'; then
+    echo "❌ Python 3.9 or newer is required (found $(python3 --version))"
+    exit 1
 fi
 
-# Clean previous builds
-echo "🗑️  Cleaning previous builds..."
-rm -rf build/ dist/ *.spec
+VERSION=$(python3 -c 'import re; print(re.search(r"__version__ = \"(.+?)\"", open("lantern.py", encoding="utf-8").read()).group(1))')
+echo "✓ Lantern $VERSION, $(python3 --version)"
 
-# Create the app bundle
-echo "🔨 Building Lantern.app..."
+if ! python3 -m PyInstaller --version &> /dev/null; then
+    echo "📦 Installing PyInstaller..."
+    python3 -m pip install pyinstaller
+fi
+
+# zeroconf is optional when running from source, but built apps always bundle it
+# so mDNS printer discovery works out of the box.
+if ! python3 -c 'import zeroconf' &> /dev/null; then
+    echo "📦 Installing zeroconf..."
+    python3 -m pip install zeroconf
+fi
+echo "✓ Bundling zeroconf for mDNS printer discovery"
+
+# PyInstaller needs Pillow to turn the PNG icon into a macOS .icns.
+if [ "$(uname)" = "Darwin" ] && ! python3 -c 'import PIL' &> /dev/null; then
+    echo "📦 Installing Pillow (for the app icon)..."
+    python3 -m pip install Pillow
+fi
+
+rm -rf build/ dist/ Lantern.spec
+
 python3 -m PyInstaller \
     --name="Lantern" \
     --windowed \
@@ -38,22 +50,24 @@ python3 -m PyInstaller \
     --clean \
     --noconfirm \
     --osx-bundle-identifier="com.lantern.networkscanner" \
-    --add-data="scanner_data.json:." \
-    scanner.py
+    --collect-submodules zeroconf \
+    --add-data "assets:assets" \
+    --add-data "data:data" \
+    --icon assets/lantern-512.png \
+    lantern.py
 
-# Check if build succeeded
-if [ ! -d "dist/Lantern.app" ]; then
-    echo "❌ Build failed!"
+if [ "$(uname)" = "Darwin" ]; then
+    OUTPUT="dist/Lantern.app"
+else
+    OUTPUT="dist/Lantern"
+fi
+
+if [ ! -e "$OUTPUT" ]; then
+    echo "❌ Build failed: $OUTPUT not found"
     exit 1
 fi
 
-echo "✅ Build complete!"
-echo ""
-echo "📦 Lantern.app created in: dist/Lantern.app"
-echo ""
-echo "📋 Next steps:"
-echo "   1. Test the app: open dist/Lantern.app"
-echo "   2. Move to Applications: cp -r dist/Lantern.app /Applications/"
-echo "   3. Create DMG (optional): ./create_dmg.sh"
-echo ""
-echo "🎉 Done!"
+echo "✅ Built $OUTPUT"
+if [ "$(uname)" = "Darwin" ]; then
+    echo "   Next: open $OUTPUT, then ./create_dmg.sh to package it"
+fi
